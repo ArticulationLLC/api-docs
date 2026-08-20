@@ -355,12 +355,533 @@ paths:
                     type: array
                     items:
                       type: string
+  /agencies/{agencyId}/components:
+    get:
+      summary: Lists components
+      description: Returns all of the agency's custom components.
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          description: ID of your Agency.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of components.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  components:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Component'
+    post:
+      summary: Creates a component
+      description: >-
+        Creates a custom component that clients can add to their pages from the
+        editor. Reference variables in `html` as `{{ site.agency.<key> }}`.
+        `{{ site.id }}`, `{{ site.domain }}` and `{{ site.title }}` are also
+        available. When `slug` is omitted one is generated from `name`.
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          description: ID of your Agency.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - html
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                  description: Name shown to clients in the editor.
+                slug:
+                  type: string
+                  maxLength: 255
+                  description: >-
+                    Unique identifier within the agency (letters, numbers, dashes,
+                    underscores). Generated from `name` when omitted. Cannot be
+                    changed later.
+                html:
+                  type: string
+                  maxLength: 65535
+                  description: The HTML inserted on the page.
+                icon:
+                  $ref: '#/components/schemas/ComponentIcon'
+                is_enabled:
+                  type: boolean
+                  default: true
+                  description: Whether the component is offered in the editor.
+                is_test_mode_only:
+                  type: boolean
+                  default: false
+                  description: Only offer the component on sites in Test Mode.
+      responses:
+        '201':
+          description: The created component.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Component'
+        '422':
+          description: Validation failed, or the slug is already in use.
+  /agencies/{agencyId}/components/{componentId}:
+    get:
+      summary: Retrieves a component
+      description: Returns a single component by ID.
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          description: ID of your Agency.
+          schema:
+            type: string
+        - name: componentId
+          in: path
+          required: true
+          description: ID of the component.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: A single component.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Component'
+    patch:
+      summary: Updates a component
+      description: Updates any of the supplied fields. The slug cannot be changed.
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          description: ID of your Agency.
+          schema:
+            type: string
+        - name: componentId
+          in: path
+          required: true
+          description: ID of the component.
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  maxLength: 255
+                html:
+                  type: string
+                  maxLength: 65535
+                icon:
+                  $ref: '#/components/schemas/ComponentIcon'
+                is_enabled:
+                  type: boolean
+                is_test_mode_only:
+                  type: boolean
+      responses:
+        '200':
+          description: The updated component.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Component'
+    delete:
+      summary: Deletes a component
+      description: >-
+        Deletes the component and its variables. Existing placements on client
+        pages stop rendering.
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          description: ID of your Agency.
+          schema:
+            type: string
+        - name: componentId
+          in: path
+          required: true
+          description: ID of the component.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deleted'
+  /agencies/{agencyId}/components/variable-keys:
+    get:
+      summary: Lists variables
+      description: Returns every variable defined across the agency's components.
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          description: ID of your Agency.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of variables.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  variable_keys:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VariableKey'
+    post:
+      summary: Creates a variable
+      description: >-
+        Defines a typed variable on a component. Its value is resolved per
+        placement, then per site, then from `default_value`.
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          description: ID of your Agency.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - component
+                - key
+                - label
+                - type
+              properties:
+                component:
+                  type: string
+                  description: Slug of the component the variable belongs to.
+                key:
+                  type: string
+                  pattern: '^[a-z][a-z0-9_]*$'
+                  description: >-
+                    Referenced in HTML as `{{ site.agency.<key> }}`. Unique across
+                    the agency. Cannot be changed later.
+                label:
+                  type: string
+                  maxLength: 255
+                  description: Human-readable name shown wherever the value is edited.
+                type:
+                  $ref: '#/components/schemas/VariableType'
+                options:
+                  type: array
+                  description: Allowed values. Required when `type` is `select`.
+                  items:
+                    type: string
+                    maxLength: 255
+                default_value:
+                  type: string
+                  nullable: true
+                  maxLength: 2000
+                is_client_editable:
+                  type: boolean
+                  default: false
+                  description: >-
+                    Allow clients to set the value from their site dashboard and per
+                    placement in the editor.
+      responses:
+        '201':
+          description: The created variable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VariableKey'
+        '422':
+          description: Validation failed, unknown component, or the key already exists.
+  /agencies/{agencyId}/components/variable-keys/{variableKeyId}:
+    patch:
+      summary: Updates a variable
+      description: Updates any of the supplied fields. The key cannot be changed.
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          description: ID of your Agency.
+          schema:
+            type: string
+        - name: variableKeyId
+          in: path
+          required: true
+          description: ID of the variable.
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                component:
+                  type: string
+                  description: Slug of the component to move the variable to.
+                label:
+                  type: string
+                  maxLength: 255
+                type:
+                  $ref: '#/components/schemas/VariableType'
+                options:
+                  type: array
+                  nullable: true
+                  items:
+                    type: string
+                    maxLength: 255
+                default_value:
+                  type: string
+                  nullable: true
+                  maxLength: 2000
+                is_client_editable:
+                  type: boolean
+      responses:
+        '200':
+          description: The updated variable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VariableKey'
+        '422':
+          description: Validation failed or unknown component.
+    delete:
+      summary: Deletes a variable
+      description: Deletes the variable and every per-site value stored for it.
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          description: ID of your Agency.
+          schema:
+            type: string
+        - name: variableKeyId
+          in: path
+          required: true
+          description: ID of the variable.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deleted'
+  /agencies/{agencyId}/sites/{siteId}/components/variables:
+    get:
+      summary: Retrieves a site's variable values
+      description: >-
+        Returns the resolved value of every variable for the site: the site's
+        own value when one is set, otherwise the variable's default. Values are
+        cast to the variable's type.
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          description: ID of your Agency.
+          schema:
+            type: string
+        - name: siteId
+          in: path
+          required: true
+          description: ID of the site.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Resolved variable values keyed by variable key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteVariables'
+    put:
+      summary: Sets a site's variable values
+      description: >-
+        Sets site-level values for one or more variables. Keys not included are
+        left unchanged. Send `null` or an empty string to clear a value so the
+        default applies again. Values are validated against each variable's
+        type. Per-placement values set by clients in the editor take precedence
+        over these and are not affected.
+      parameters:
+        - name: agencyId
+          in: path
+          required: true
+          description: ID of your Agency.
+          schema:
+            type: string
+        - name: siteId
+          in: path
+          required: true
+          description: ID of the site.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Variable keys mapped to their new values.
+              additionalProperties:
+                oneOf:
+                  - type: string
+                  - type: number
+                  - type: boolean
+                nullable: true
+              example:
+                station_id: WXYZ
+                autoplay: true
+                theme: null
+      responses:
+        '200':
+          description: The site's resolved variable values after the update.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SiteVariables'
+        '422':
+          description: Unknown variable key or a value failed type validation.
 components:
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
   schemas:
+    Component:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the component.
+        name:
+          type: string
+          description: Name shown to clients in the editor.
+          example: Radio Player
+        slug:
+          type: string
+          description: Unique identifier within the agency, used to reference the component.
+          example: radio-player
+        html:
+          type: string
+          description: The HTML inserted on the page. May reference variables as `{{ site.agency.<key> }}`.
+          example: '<iframe src="https://player.example.com/{{ site.agency.station_id }}"></iframe>'
+        icon:
+          $ref: '#/components/schemas/ComponentIcon'
+        is_enabled:
+          type: boolean
+          description: Whether the component is offered in the editor.
+        is_test_mode_only:
+          type: boolean
+          description: Whether the component is only offered on sites in Test Mode.
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    ComponentIcon:
+      type: string
+      nullable: true
+      description: Icon shown next to the component in the editor.
+      enum:
+        - heroicon-s-code-bracket
+        - heroicon-s-play-circle
+        - heroicon-s-musical-note
+        - heroicon-s-film
+        - heroicon-s-photo
+        - heroicon-s-megaphone
+        - heroicon-s-chat-bubble-left-right
+        - heroicon-s-calendar-days
+        - heroicon-s-map-pin
+        - heroicon-s-star
+        - heroicon-s-globe-alt
+        - heroicon-s-envelope
+    VariableType:
+      type: string
+      enum:
+        - text
+        - number
+        - boolean
+        - select
+        - url
+    VariableKey:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the variable.
+        component:
+          type: string
+          description: Slug of the component the variable belongs to.
+          example: radio-player
+        key:
+          type: string
+          description: Referenced in component HTML as `{{ site.agency.<key> }}`.
+          example: station_id
+        label:
+          type: string
+          example: Station ID
+        type:
+          $ref: '#/components/schemas/VariableType'
+        options:
+          type: array
+          nullable: true
+          description: Allowed values for `select` variables.
+          items:
+            type: string
+        default_value:
+          type: string
+          nullable: true
+          description: Used when no site or placement value is set.
+        is_client_editable:
+          type: boolean
+          description: Whether clients may set the value themselves.
+        sort_order:
+          type: integer
+    SiteVariables:
+      type: object
+      properties:
+        variables:
+          type: object
+          description: Resolved values keyed by variable key, cast to each variable's type.
+          additionalProperties:
+            oneOf:
+              - type: string
+              - type: number
+              - type: boolean
+            nullable: true
+          example:
+            station_id: WXYZ
+            autoplay: true
+    Deleted:
+      type: object
+      properties:
+        deleted:
+          type: boolean
+          example: true
     Site:
       type: object
       properties:
