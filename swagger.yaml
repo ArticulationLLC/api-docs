@@ -553,8 +553,8 @@ paths:
     post:
       summary: Creates a variable
       description: >-
-        Defines a typed variable on a component. Its value is resolved per
-        placement, then per site, then from `default_value`.
+        Defines a typed variable on a component. Its value is resolved from the
+        site's value, then from `default_value`.
       parameters:
         - name: agencyId
           in: path
@@ -599,12 +599,6 @@ paths:
                   type: string
                   nullable: true
                   maxLength: 2000
-                is_client_editable:
-                  type: boolean
-                  default: false
-                  description: >-
-                    Allow clients to set the value from their site dashboard and per
-                    placement in the editor.
       responses:
         '201':
           description: The created variable.
@@ -656,8 +650,6 @@ paths:
                   type: string
                   nullable: true
                   maxLength: 2000
-                is_client_editable:
-                  type: boolean
       responses:
         '200':
           description: The updated variable.
@@ -723,8 +715,7 @@ paths:
         Sets site-level values for one or more variables. Keys not included are
         left unchanged. Send `null` or an empty string to clear a value so the
         default applies again. Values are validated against each variable's
-        type. Per-placement values set by clients in the editor take precedence
-        over these and are not affected.
+        type.
       parameters:
         - name: agencyId
           in: path
@@ -855,10 +846,7 @@ components:
         default_value:
           type: string
           nullable: true
-          description: Used when no site or placement value is set.
-        is_client_editable:
-          type: boolean
-          description: Whether clients may set the value themselves.
+          description: Used when no site value is set.
         sort_order:
           type: integer
     SiteVariables:
