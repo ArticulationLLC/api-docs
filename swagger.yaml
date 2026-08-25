@@ -214,7 +214,7 @@ paths:
   /agencies/{agencyId}/sites/{siteId}/disable:
     put:
       summary: Disables a site
-      description: Disables a site by ID. Disabled sites are automatically deleted after 30 days.
+      description: Disables a site by ID. Disabled sites are automatically deleted after 60 days.
       parameters:
         - name: agencyId
           in: path
