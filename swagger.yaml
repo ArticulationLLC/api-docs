@@ -892,6 +892,20 @@ components:
         is_disabled:
           type: boolean
           description: Whether the site is disabled.
+        conversion_status:
+          type: string
+          readOnly: true
+          description: >-
+            The site's conversion status: `pending` when queued, `processing`
+            while running, `failed` if the conversion failed, or `completed`
+            when finished. Returns `not_availble` when the site has no conversion.
+          enum:
+            - pending
+            - processing
+            - failed
+            - completed
+            - not_availble
+          example: completed
         last_published:
           type: string
           format: date-time
